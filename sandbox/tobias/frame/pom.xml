@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	 xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+
+  <groupId>org.thobe</groupId>
+  <artifactId>frame-introspect</artifactId>
+  <version>0.1-SNAPSHOT</version>
+  <name>Frame introspection library</name>
+  <packaging>pom</packaging>
+  <description>
+  </description>
+
+  <developers>
+    <developer>
+      <id>thobe</id>
+      <name>Tobias Ivarsson</name>
+      <email>thobes@gmail.com</email>
+      <url>http://www.thobe.org/</url>
+      <timezone>UTC+1</timezone>
+    </developer>
+  </developers>
+
+  <modules>
+    <module>library</module>
+    <module>native</module>
+  </modules>
+
+</project>

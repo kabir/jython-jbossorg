@@ -1,0 +1,122 @@
+Title: Who uses Jython
+
+<h3>Who uses Jython?</h3>
+
+Here's a partial list of projects and users of Jython (most recent
+additions first).  If you are aware of any others, or would like to
+get your projects listed here, just drop us a message at
+jython-dev@lists.sourceforge.net.
+
+<!--
+<p>
+<dt><b><a href=""></a></b>
+<dd>
+</dd>
+-->
+
+
+<dl>
+
+<p>
+<dt><b><a href="http://staf.sourceforge.net/index.php">STAF (Software Testing Automation Framework)</a></b>
+<dd>
+uses Jython for its execution engine <a href="http://staf.sourceforge.net/index.php#STAXOverview">STAX</a>.
+</dd>
+
+<p>
+<dt><b><a href="http://sulu.sourceforge.net/">Sulu</a></b>
+<dd>
+Sulu is an LGPL Mozilla XUL
+rendering engine written in Java that uses Jython instead of
+JavaScript.
+</dd>
+
+<p>
+<dt><b><a href="http://www.jedit.org/">jEdit</a></b>
+<dd>
+jEdit is a programmer's text editor which has a
+plugin (JythonInterpreter) that provides support for writing jEdit macros
+in Python.
+</dd>
+
+<p>
+<dt><b><a href="http://drools.org">Drools</a></b>
+<dd>
+An expert system written in java with semantics for Python. You can use valid Python
+syntax for any condition or consequence.  With drools you can easily
+process large amounts of data with logic and data separation, leaving
+your customers to concentrate just on the business rules and not how
+to process the data You just insert the facts into the system and drools
+executes the consequences on those facts based on the conditions
+</dd>
+</dt>
+
+
+<p>
+<dt><b><a href="http://www.jpk.com">JPK Instruments</a></b>
+<dd>
+JPK Instruments is a young biotech company in Berlin that develops
+atomic force microscopes for use in biological and soft-matter
+research.  The instrument control and imaging software is written
+mainly in Java and Jython.  Jython allows JPK's customers to write
+scripts to automate their experiments, provides a command-line
+interface for debugging and for accessing experimental features, and
+for dynamically configuring the standard software.
+
+</dd>
+
+
+<p><dt><b><a href="http://www.cabochon.com">Wyvern</a></b>
+<dd>Wyvern is a 100% free, extensible, multi-player online adventure
+game that uses Jython as its extension language.  You can become a 
+Wizard player and develop new game areas and objects using Jython.
+
+<p><dt><b><a href="http://www.free-schooling.org">FreePlay</a></b>
+<dd>The Freeplay project is developing a free course authoring tool which 
+can be used to create lessons which are more like adventure games than 
+school lessons. Jython is used as the scripting language.
+
+<p><dt><b><a href="http://family.caltech.edu">FamilyRelations</a></b>
+<dd>FamilyRelations is a GPLed bioinformatics graphical user interface for
+exploring genomic sequence similarity.  It is written entirely in Jython.
+
+<p><dt><b><a href="http://www.propylon.com">Propylon</a></b>
+<dd>Propylon use Jython to bring the power of Python to complex XML
+processing on the Java Virtual Machine. Propylon also use Jython to
+provide enhanced server-side scripting and integration in its pervasive
+portal server product: Mission Control. 
+
+<p><dt><b><a href="http://www.AirportTools.com/jsimmod">JSIMMOD</a></b>
+<dd>JSIMMOD is a free simulation tool which is
+bringing advanced concepts to the modeling of aviation
+issues.  Jython provides dynamic elements to the
+simulation which are not easily replicated in other
+simulations.
+
+<p><dt><b><a href="http://www.pushtotest.com/ptt">TestMaker</a></b>
+<dd>A free open-source framework for building intelligent test agents to
+check Web Services (HTTP, HTTPS, SOAP, .NET, XML-RPC) for functionality,
+scalability and performance. TestMaker embeds Jython as a scripting language
+that calls a library of test objects. TestMaker is built on NetBeans so it
+offers Jython users a very nice graphical integrated development environment
+for general Jython development too.
+
+<p><dt><b><a href="http://www.bison-group.com">BISON Solution</a></b>
+<dd>BISON Solution is the first process oriented Business Solution
+developed in 100% pure Java and fulfilling the J2EE Standards. 
+BISON Solution uses Jython for scripting and high-level customizing of
+existing business objects.
+
+<p><dt><b><a href="http://www.ssec.wisc.edu/~billh/visad.html">VisAD</a></b>
+<dd>VisAD is a Java component library for interactive and collaborative
+visualization and analysis of numerical data. It uses Jython to define
+an easy-to-use scripting language.
+
+<p><dt><b><a href="http://luxor-xul.sourceforge.net">Luxor</a></b>
+<dd>Luxor is an open-source XML User Interface Language
+(XUL) toolkit in Java that supports handpicked Mozilla
+XUL goodies and includes a web server, a portal engine
+(supporting RSS), a template engine (Velocity), a
+scripting interpreter (Python) and more.
+
+</dl>

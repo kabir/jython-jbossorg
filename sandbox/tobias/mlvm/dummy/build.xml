@@ -1,0 +1,15 @@
+<project name="mlvm-dummies" default="jar" basedir=".">
+  <target name="clean">
+    <delete dir="${basedir}/build"/>
+    <delete file="${basedir}/${ant.project.name}.jar"/>
+  </target>
+  <target name="build">
+    <mkdir dir="${basedir}/build"/>
+    <javac srcdir="${basedir}/src" destdir="${basedir}/build" />
+  </target>
+  <target name="jar" depends="build">
+    <jar destfile="${basedir}/${ant.project.name}.jar">
+      <fileset dir="${basedir}/build"/>
+    </jar>
+  </target>
+</project>

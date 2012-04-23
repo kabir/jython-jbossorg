@@ -1,0 +1,490 @@
+diff --git a/inti.patch b/inti.patch
+--- a/inti.patch
++++ b/inti.patch
+@@ -1,9 +1,9 @@
+ diff --git a/src/cpu/x86/vm/assembler_x86.cpp b/src/cpu/x86/vm/assembler_x86.cpp
+ --- a/src/cpu/x86/vm/assembler_x86.cpp
+ +++ b/src/cpu/x86/vm/assembler_x86.cpp
+-@@ -7160,16 +7160,25 @@
++@@ -7352,14 +7352,25 @@
+    assert(itableMethodEntry::size() * wordSize == wordSize, "adjust the scaling in the code below");
+-   lea(recv_klass, Address(recv_klass, itable_index, Address::times_ptr));
++   lea(recv_klass, Address(recv_klass, itable_index, Address::times_ptr, itentry_off));
+  
+ +  // THOBE: jrose.inti
+ +  bool pushed_itable_index = false;
+@@ -24,40 +24,37 @@
+ +    (InterfaceInjection ? find_injected_interface : L_no_such_interface);
+  
+    for (int peel = 1; peel >= 0; peel--) {
+--    movptr(method_result, Address(scan_temp, itableOffsetEntry::interface_offset_in_bytes()));
+--    cmpptr(intf_klass, method_result);
+-+    cmpptr(intf_klass, Address(scan_temp, itableOffsetEntry::interface_offset_in_bytes()));
+-     jccb(Assembler::notEqual, search);
+++    // THOBE: in my first version I refactored to avoid temporary...
++     movptr(method_result, Address(scan_temp, itableOffsetEntry::interface_offset_in_bytes()));
++     cmpptr(intf_klass, method_result);
+  
+-     // Got a hit.
+-@@ -7184,11 +7193,103 @@
+-     // the reciever class doesn't implement the interface, and wasn't the
++@@ -7378,17 +7389,109 @@
++     // the receiver class doesn't implement the interface, and wasn't the
+      // same as when the caller was compiled.
+      testptr(method_result, method_result);
+ +    jcc(Assembler::zero, static_interface_not_found);
+ +    addptr(scan_temp, scan_step);
+ +  }
+ +
+-+  if (InterfaceInjection) {
+++  if (InterfaceInjection) { // THOBE: inti
+ +    // respect successful fallthrough from previous logic
+ +    jmp(found_method);
+ +
+-+    // if (!intf_klass.is_injectable_interface()) jmp(L_no_such_interface);
+++    bind(find_injected_interface);
+++    // "if (!intf_klass.is_injectable_interface()) jmp(L_no_such_interface);"
+ +    movptr(recv_klass, Address(intf_klass, Klass::access_flags_offset_in_bytes()));
+-+    testptr(recv_klass, JVM_ACC_VOLATILE); // THOBE update if other flag decided
+++    testptr(recv_klass, JVM_ACC_VOLATILE); // THOBE: update if other flag decided
+      jcc(Assembler::zero, L_no_such_interface);
+ -    addptr(scan_temp, scan_step);
+ -  }
+ -
+-+    bind(find_injected_interface);
+-+
+-+    // THOBE: emit: if (!interface.isInjectable()) jmp(L_no_such_interface);
+ +
+ +    if (pushed_itable_index) {
+ +      // recv_klass is dead, but itable_index was aliased to method_result
+ +      itable_index = recv_klass;
+ +      pop(itable_index.as_register());  // pop and restore
+ +    }
+++
+ +    // See if there is an extension record.  It can be in the second word of this word-pair.
+ +    // (See itableOffsetEntry::extension_addr() for how this works.)
+ +    movptr(scan_temp, Address(scan_temp, itableOffsetEntry::offset_offset_in_bytes()));
+@@ -113,13 +110,19 @@
+ +
+ +  // This must be last, since the caller expects fall-through.
+    bind(found_method);
+++  // THOBE: does the use of recv_klass in the inti code interfere with the
+++  // code ("got a hit.") bellow? 
+ +  if (pushed_itable_index)  pop(recv_klass);  // pop and discard
+ +  bind(found_method_no_pop);
+-+}
+-+
++ 
++   // Got a hit.
++   movl(scan_temp, Address(scan_temp, itableOffsetEntry::offset_offset_in_bytes()));
++   movptr(method_result, Address(recv_klass, scan_temp, Address::times_1));
++ }
++ 
+ +void MacroAssembler::inject_interface_and_get_method(Register target_klass,
+ +						     Register iface_klass,
+-+						     RegisterConstant itable_index,
+++						     RegisterOrConstant itable_index,
+ +						     Register method_result,
+ +						     Label& injection_refused) {
+ +  assert_different_registers(target_klass, iface_klass);
+@@ -134,23 +137,25 @@
+ +  int first_method_offset =       base_offset + wordSize * instanceKlass::ITE_methods;
+ +  Address method_addr(method_result, itable_index, Address::times_ptr, first_method_offset);
+ +  movptr(method_result, method_addr);
+- }
+++}
+  
++ void MacroAssembler::check_klass_subtype(Register sub_klass,
++                            Register super_klass,
++@@ -7592,6 +7695,8 @@
++     // Also, the condition codes are properly set Z/NZ on succeed/failure.
++   }
+  
+-@@ -7266,6 +7367,7 @@
+-     pop(rcx);
+-     pop(rax);
+-   }
+-+  // THOBE: if it was a failure (prefably before we jump to the fail-label) and it's an injectable interface; try inject
+-   jcc(Assembler::notEqual, L_failure);
+- 
+-   // Success.  Cache the super we found and proceed in triumph.
+++  // THOBE: if it was a failure (prefably before we jump to the fail-label)
+++  // and it's an injectable interface; try inject
++   if (L_failure == &L_fallthrough)
++         jccb(Assembler::notEqual, *L_failure);
++   else  jcc(Assembler::notEqual, *L_failure);
+ diff --git a/src/cpu/x86/vm/assembler_x86.hpp b/src/cpu/x86/vm/assembler_x86.hpp
+ --- a/src/cpu/x86/vm/assembler_x86.hpp
+ +++ b/src/cpu/x86/vm/assembler_x86.hpp
+-@@ -1805,6 +1805,16 @@
+-                                Register scan_temp,
+-                                Label& no_such_interface);
++@@ -1886,6 +1886,16 @@
++                            Register temp_reg,
++                            Label& L_success);
+  
+ +  // Attempt to inject the interface and lookup the method in the injected
+ +  // interface, if injection was refused, jump to the refused label.
+@@ -158,7 +163,7 @@
+ +  // Result register may be the same as any of the input registers.
+ +  void inject_interface_and_get_method(Register target_klass,
+ +				       Register iface_klass,
+-+				       RegisterConstant itable_index,
+++				       RegisterOrConstant itable_index,
+ +				       Register method_result,
+ +				       Label& injection_refused);
+ +
+@@ -168,7 +173,7 @@
+ diff --git a/src/cpu/x86/vm/methodHandles_x86.cpp b/src/cpu/x86/vm/methodHandles_x86.cpp
+ --- a/src/cpu/x86/vm/methodHandles_x86.cpp
+ +++ b/src/cpu/x86/vm/methodHandles_x86.cpp
+-@@ -441,6 +441,7 @@
++@@ -482,6 +482,7 @@
+        // get interface klass
+        Label no_such_interface;
+        __ verify_oop(rdx_intf);
+@@ -179,48 +184,48 @@
+ diff --git a/src/cpu/x86/vm/templateTable_x86_64.cpp b/src/cpu/x86/vm/templateTable_x86_64.cpp
+ --- a/src/cpu/x86/vm/templateTable_x86_64.cpp
+ +++ b/src/cpu/x86/vm/templateTable_x86_64.cpp
+-@@ -3011,12 +3011,14 @@
++@@ -3019,12 +3019,14 @@
++   // profile this call
+    __ profile_virtual_call(rdx, r13, r14);
+  
+-   if (MethodHandleSupport) {          // %%% let's use this refactored code always
+--    Label no_such_interface, no_such_method;
+-+    Label no_such_interface, no_such_method, injection_entry;
+-+    Label& try_inject = (InterfaceInjection ? injection_entry : no_such_interface);
++-  Label no_such_interface, no_such_method;
+++  Label no_such_interface, no_such_method, injection_entry;
+++  Label& try_inject = (InterfaceInjection ? injection_entry : no_such_interface);
+  
+-     __ lookup_interface_method(// inputs: rec. class, interface, itable index
+-                                rdx, rax, rbx,
+-                                // outputs: method, scan temp. reg
+-                                rbx, r13,
+-+			       try_inject,
+-                                no_such_interface);
++   __ lookup_interface_method(// inputs: rec. class, interface, itable index
++                              rdx, rax, rbx,
++                              // outputs: method, scan temp. reg
++                              rbx, r13,
+++			     try_inject,
++                              no_such_interface);
+  
+-     // rbx,: methodOop to call
+-@@ -3034,6 +3036,20 @@
+-     __ jump_from_interpreted(rbx, rdx);
+-     __ should_not_reach_here();
++   // rbx,: methodOop to call
++@@ -3042,6 +3044,20 @@
++   __ jump_from_interpreted(rbx, rdx);
++   __ should_not_reach_here();
+  
+-+    if (InterfaceInjection) {
+-+      Label injection_failed;
+-+      __ bind(injection_entry);
+++  if (InterfaceInjection) {
+++    Label injection_failed; // THOBE: should be use by the interface lookup
+++    __ bind(injection_entry);
+ +
+-+      __ pop(rbx);         // pop return address (pushed by prepare_invoke)
+-+      __ restore_bcp();    // r13 must be correct for exception handler   (was destroyed)
+-+      __ restore_locals(); // make sure locals pointer is correct as well (was destroyed)
+-+      __ load_klass(rdx, rcx);
+-+      __ inject_interface_lookup_method(rdx, rax, );
+-+      // THOBE: implement this
+++    __ pop(rbx);         // pop return address (pushed by prepare_invoke)
+++    __ restore_bcp();    // r13 must be correct for exception handler   (was destroyed)
+++    __ restore_locals(); // make sure locals pointer is correct as well (was destroyed)
+++    __ load_klass(rdx, rcx);
+++    __ inject_interface_lookup_method(rdx, rax, ); // THOBE: implement this
+++    // THOBE: implement this
+ +
+-+      __ jmp(no_such_interface);
+-+    }
+++    __ jmp(no_such_interface);
+++  }
+ +
+-     // exception handling code follows...
+-     // note: must restore interpreter registers to canonical
+-     //       state for exception handling to work correctly!
++   // exception handling code follows...
++   // note: must restore interpreter registers to canonical
++   //       state for exception handling to work correctly!
+ diff --git a/src/share/vm/classfile/javaClasses.cpp b/src/share/vm/classfile/javaClasses.cpp
+ --- a/src/share/vm/classfile/javaClasses.cpp
+ +++ b/src/share/vm/classfile/javaClasses.cpp
+-@@ -2427,6 +2427,52 @@
+-   return mtform->obj_field(_erasedType_offset);
++@@ -2407,6 +2407,52 @@
++   return ptypes(mt)->length();
+  }
+  
+ +// Support for java_dyn_InterfaceInjector
+@@ -271,10 +276,10 @@
+ +
+  
+  
+- 
+-@@ -2773,6 +2819,9 @@
+-     java_dyn_MethodType::compute_offsets();
+-     java_dyn_MethodTypeForm::compute_offsets();
++ // Support for java_dyn_MethodTypeForm
++@@ -2816,6 +2862,9 @@
++   if (EnableInvokeDynamic) {
++     java_dyn_CallSite::compute_offsets();
+    }
+ +  if (InterfaceInjection) {
+ +    java_dyn_InterfaceInjector::compute_offsets();
+@@ -285,8 +290,8 @@
+ diff --git a/src/share/vm/classfile/javaClasses.hpp b/src/share/vm/classfile/javaClasses.hpp
+ --- a/src/share/vm/classfile/javaClasses.hpp
+ +++ b/src/share/vm/classfile/javaClasses.hpp
+-@@ -1024,6 +1024,22 @@
+-   static int erasedType_offset_in_bytes()       { return _erasedType_offset; }
++@@ -690,6 +690,22 @@
++   friend class JavaClasses;
+  };
+  
+ +// Interface to java.dyn.InterfaceInjector
+@@ -307,22 +312,24 @@
+ +
+  
+  
+- 
++ // Interface to java.lang.ref.Reference objects
+ diff --git a/src/share/vm/classfile/systemDictionary.hpp b/src/share/vm/classfile/systemDictionary.hpp
+ --- a/src/share/vm/classfile/systemDictionary.hpp
+ +++ b/src/share/vm/classfile/systemDictionary.hpp
+-@@ -142,6 +142,7 @@
+-   template(MethodType_klass,             java_dyn_MethodType,            Opt) \
+-   template(MethodTypeForm_klass,         java_dyn_MethodTypeForm,        Opt) \
+-   template(WrongMethodTypeException_klass, java_dyn_WrongMethodTypeException, Opt) \
++@@ -147,6 +147,9 @@
++   template(InvokeDynamic_klass,          java_dyn_InvokeDynamic,         Opt) \
++   /* Note: MethodHandle must be first, and InvokeDynamic last in group */     \
++                                                                               \
+++  /* support for interface injection */                                       \
+ +  template(InterfaceInjector_klass,      java_dyn_InterfaceInjector,     Opt) \
+-   template(vector_klass,                 java_util_Vector,               Pre) \
+-   template(hashtable_klass,              java_util_Hashtable,            Pre) \
+-   template(stringBuffer_klass,           java_lang_StringBuffer,         Pre) \
+++                                                                              \
++   template(StringBuffer_klass,           java_lang_StringBuffer,         Pre) \
++   template(StringBuilder_klass,          java_lang_StringBuilder,        Pre) \
++                                                                               \
+ diff --git a/src/share/vm/classfile/vmSymbols.hpp b/src/share/vm/classfile/vmSymbols.hpp
+ --- a/src/share/vm/classfile/vmSymbols.hpp
+ +++ b/src/share/vm/classfile/vmSymbols.hpp
+-@@ -220,6 +220,13 @@
++@@ -227,6 +227,13 @@
+    template(java_dyn_WrongMethodTypeException,         "java/dyn/WrongMethodTypeException")        \
+    template(java_dyn_MethodType_signature,             "Ljava/dyn/MethodType;")                    \
+    template(java_dyn_MethodHandle_signature,           "Ljava/dyn/MethodHandle;")                  \
+@@ -339,7 +346,7 @@
+ diff --git a/src/share/vm/includeDB_core b/src/share/vm/includeDB_core
+ --- a/src/share/vm/includeDB_core
+ +++ b/src/share/vm/includeDB_core
+-@@ -2015,6 +2015,7 @@
++@@ -2046,6 +2046,7 @@
+  instanceKlass.cpp                       thread_<os_family>.inline.hpp
+  instanceKlass.cpp                       verifier.hpp
+  instanceKlass.cpp                       vmSymbols.hpp
+@@ -350,7 +357,7 @@
+ diff --git a/src/share/vm/interpreter/bytecodeInterpreter.cpp b/src/share/vm/interpreter/bytecodeInterpreter.cpp
+ --- a/src/share/vm/interpreter/bytecodeInterpreter.cpp
+ +++ b/src/share/vm/interpreter/bytecodeInterpreter.cpp
+-@@ -1969,6 +1969,7 @@
++@@ -1960,6 +1960,7 @@
+          UPDATE_PC_AND_TOS_AND_CONTINUE(4, -(dims-1));
+        }
+        CASE(_checkcast):
+@@ -358,7 +365,7 @@
+            if (STACK_OBJECT(-1) != NULL) {
+              u2 index = Bytes::get_Java_u2(pc+1);
+              if (ProfileInterpreter) {
+-@@ -2161,14 +2162,33 @@
++@@ -2152,14 +2153,33 @@
+            if (ki->interface_klass() == iclass) break;
+          }
+          // If the interface isn't found, this class doesn't implement this
+@@ -416,7 +423,7 @@
+  
+      // abort if it is java.lang.Object (initialization is handled in genesis)
+      klassOop super = this->super();
+-@@ -449,6 +455,123 @@
++@@ -460,6 +466,123 @@
+    }
+  }
+  
+@@ -503,7 +510,7 @@
+ +	objArrayHandle extension(THREAD, extension_oop);
+ +	extension->obj_at_put(ITE_key, interf);
+ +	extension->obj_at_put(ITE_next, target_klass->itable_extension());
+-+	KlassHandle holder = KlassHandles::MethodHandle_klass();
+++	//KlassHandle holder = KlassHandles::MethodHandle_klass();
+ +	for (int i=0; i < methods->length(); i++) {
+ +	  oop mh = handles->obj_at(i);
+ +	  if (!java_dyn_MethodHandle::is_instance(mh)) {
+@@ -540,7 +547,7 @@
+  bool instanceKlass::can_be_primary_super_slow() const {
+    if (is_interface())
+      return false;
+-@@ -620,11 +743,21 @@
++@@ -632,11 +755,21 @@
+      this_oop->name()->print_value();
+      tty->print_cr("%s (" INTPTR_FORMAT ")", h_method() == NULL ? "(no method)" : "", (address)this_oop());
+    }
+@@ -565,17 +572,15 @@
+ diff --git a/src/share/vm/oops/instanceKlass.hpp b/src/share/vm/oops/instanceKlass.hpp
+ --- a/src/share/vm/oops/instanceKlass.hpp
+ +++ b/src/share/vm/oops/instanceKlass.hpp
+-@@ -163,6 +163,9 @@
+-   klassOop        _implementors[implementors_limit];
++@@ -186,6 +186,7 @@
+    // Generic signature, or null if none.
+    symbolOop       _generic_signature;
+-+  // invokedynamic bootstrap method if this is a class
+-+  // interface injector if this is an (injectable) interface
+-+  oop             _bootstrap_method;
++   // invokedynamic bootstrap method (a java.dyn.MethodHandle)
+++  // interface injector for (injectable) interfaces (java.dyn.InterfaceInjector)
++   oop             _bootstrap_method;
+    // Annotations for this class, or null if none.
+    typeArrayOop    _class_annotations;
+-   // Annotation objects (byte arrays) for fields, or null if no annotations.
+-@@ -249,6 +252,20 @@
++@@ -274,6 +275,20 @@
+    int  itable_length() const               { return _itable_len; }
+    void set_itable_length(int len)          { _itable_len = len; }
+  
+@@ -596,7 +601,7 @@
+    // array klasses
+    klassOop array_klasses() const           { return _array_klasses; }
+    void set_array_klasses(klassOop k)       { oop_store_without_check((oop*) &_array_klasses, (oop) k); }
+-@@ -471,6 +488,16 @@
++@@ -524,6 +539,16 @@
+    void set_cached_itable_index(size_t idnum, int index);
+    int cached_itable_index(size_t idnum);
+  
+@@ -627,7 +632,7 @@
+ diff --git a/src/share/vm/oops/klassVtable.cpp b/src/share/vm/oops/klassVtable.cpp
+ --- a/src/share/vm/oops/klassVtable.cpp
+ +++ b/src/share/vm/oops/klassVtable.cpp
+-@@ -896,6 +896,9 @@
++@@ -890,6 +890,9 @@
+    }
+    // Check that the last entry is empty
+    itableOffsetEntry* ioe = offset_entry(size_offset_table() - 1);
+@@ -640,7 +645,7 @@
+ diff --git a/src/share/vm/oops/klassVtable.hpp b/src/share/vm/oops/klassVtable.hpp
+ --- a/src/share/vm/oops/klassVtable.hpp
+ +++ b/src/share/vm/oops/klassVtable.hpp
+-@@ -195,6 +195,14 @@
++@@ -198,6 +198,14 @@
+    static itableMethodEntry* method_entry(klassOop k, int offset) { return (itableMethodEntry*)(((address)k) + offset); }
+    itableMethodEntry* first_method_entry(klassOop k)              { return method_entry(k, _offset); }
+  
+@@ -655,7 +660,7 @@
+    void initialize(klassOop interf, int offset) { _interface = interf; _offset = offset; }
+  
+    // Static size and offset accessors
+-@@ -233,6 +241,8 @@
++@@ -236,6 +244,8 @@
+  //    ...
+  //    klassOop of interface n             \
+  //    offset to vtable from start of oop  / offset table entry
+@@ -664,7 +669,7 @@
+  //    --- vtable for interface 1 ---
+  //    methodOop                           \
+  //    compiler entry point                / method table entry
+-@@ -261,6 +271,10 @@
++@@ -264,6 +274,10 @@
+  
+    int size_offset_table()                { return _size_offset_table; }
+  
+@@ -678,7 +683,7 @@
+ diff --git a/src/share/vm/oops/methodOop.cpp b/src/share/vm/oops/methodOop.cpp
+ --- a/src/share/vm/oops/methodOop.cpp
+ +++ b/src/share/vm/oops/methodOop.cpp
+-@@ -882,6 +882,25 @@
++@@ -913,6 +913,25 @@
+  }
+  
+  
+@@ -707,7 +712,7 @@
+ diff --git a/src/share/vm/oops/methodOop.hpp b/src/share/vm/oops/methodOop.hpp
+ --- a/src/share/vm/oops/methodOop.hpp
+ +++ b/src/share/vm/oops/methodOop.hpp
+-@@ -529,6 +529,12 @@
++@@ -532,6 +532,12 @@
+                                           symbolHandle signature,
+                                           Handle method_type,
+                                           TRAPS);
+@@ -719,7 +724,7 @@
+ +                                         TRAPS);
+    // these operate only on invoke methods:
+    oop method_handle_type() const;
+-   static jint* method_type_pointer_chase();
++   static jint* method_type_offsets_chain();  // series of pointer-offsets, terminated by -1
+ diff --git a/src/share/vm/prims/unsafe.cpp b/src/share/vm/prims/unsafe.cpp
+ --- a/src/share/vm/prims/unsafe.cpp
+ +++ b/src/share/vm/prims/unsafe.cpp
+@@ -749,7 +754,7 @@
+  
+  UNSAFE_ENTRY(void, Unsafe_MonitorEnter(JNIEnv *env, jobject unsafe, jobject jobj))
+    UnsafeWrapper("Unsafe_MonitorEnter");
+-@@ -1172,6 +1190,9 @@
++@@ -1176,6 +1194,9 @@
+  #define MTH LANG"reflect/Method;"
+  #define THR LANG"Throwable;"
+  
+@@ -759,7 +764,7 @@
+  #define DC0_Args LANG"String;[BII"
+  #define DC1_Args DC0_Args LANG"ClassLoader;" "Ljava/security/ProtectionDomain;"
+  
+-@@ -1453,6 +1474,13 @@
++@@ -1457,6 +1478,13 @@
+      {CC"defineAnonymousClass", CC"("DAC_Args")"CLS,      FN_PTR(Unsafe_DefineAnonymousClass)},
+  };
+  
+@@ -773,7 +778,7 @@
+  #undef CC
+  #undef FN_PTR
+  
+-@@ -1523,6 +1551,17 @@
++@@ -1527,6 +1555,17 @@
+          env->ExceptionClear();
+        }
+      }
+@@ -794,9 +799,9 @@
+ diff --git a/src/share/vm/runtime/globals.hpp b/src/share/vm/runtime/globals.hpp
+ --- a/src/share/vm/runtime/globals.hpp
+ +++ b/src/share/vm/runtime/globals.hpp
+-@@ -3275,6 +3275,9 @@
+-   diagnostic(bool, OptimizeMethodHandles, true,                             \
+-           "when constructing method handles, try to improve them")          \
++@@ -3487,6 +3487,9 @@
++   develop(bool, TraceInvokeDynamic, false,                                  \
++           "trace internal invoke dynamic operations")                       \
+                                                                              \
+ +  product(bool, InterfaceInjection, false,                                  \
+ +          "support dynamic extension of classes by interfaces")             \
+diff --git a/series b/series
+--- a/series
++++ b/series
+@@ -16,9 +16,11 @@
+ meth.proj.patch                 #-/meth #+projects
+ anonk.proj.patch                #-/anonk #+projects
+ 
++# Interface injection
++inti.patch
++
+ # Keep these separate, for debugging and review:
+ annot.patch     #+annot         #-/annot #+d1605aabd0a1 #+jdk7-b30 #-testable
+-inti.patch      #+inti          #-/inti #+d1605aabd0a1 #+jdk7-b30 #-buildable
+ callcc.patch    #+callcc        #+/meth #+/indy #-/callcc #+d3ab6707ff98 #-testable
+ tailc.patch     #+tailc-lazy    #-/tailc #-tailc-eager
+ tailc-eager.patch #+tailc-lazy  #-/tailc #-tailc-lazy

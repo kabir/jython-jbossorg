@@ -1,0 +1,76 @@
+diff --git a/inti.patch b/inti.patch
+--- a/inti.patch
++++ b/inti.patch
+@@ -45,7 +45,7 @@
+ new file mode 100644
+ --- /dev/null
+ +++ b/src/share/classes/java/dyn/InterfaceInjector.java
+-@@ -0,0 +1,99 @@
++@@ -0,0 +1,102 @@
+ +package java.dyn;
+ +
+ +/**
+@@ -68,6 +68,8 @@
+ +    }
+ +
+ +    // Implementation internals
+++    private static final MethodHandles.Lookup LOOKUP = MethodHandles.publicLookup();
+++
+ +    private static class InjectorSetup {
+ +        private InterfaceInjector injector = null;
+ +        final Class<?> iface;
+@@ -81,7 +83,7 @@
+ +                throw new IllegalStateException("Injector already specified for " + iface);
+ +	    this.injector = injector;
+ +        }
+-+        void pop(Class<?> iface) {
+++        InterfaceInjector pop(Class<?> iface) {
+ +            if (iface != this.iface) {
+ +                return last.pop(iface);
+ +            } else {
+@@ -97,8 +99,9 @@
+ +        protected InjectorSetup initialValue() {
+ +            return new InjectorSetup(null) {
+ +                @Override
+-+                void pop(Class<?> iface) {
+-+                    setup.set(this)
+++                InterfaceInjector pop(Class<?> iface) {
+++                    setup.set(this);
+++		    return null;
+ +                }
+ +            };
+ +        }
+@@ -107,7 +110,7 @@
+ +    private MethodHandle getHandle(Class<?> target,
+ +				   InterfaceImplementor implementor,
+ +				   String name, MethodType type) {
+-+	MethodHandle result = MethodHandles.findVirtual(target, name, type);
+++	MethodHandle result = LOOKUP.findVirtual(target, name, type);
+ +	if (result == null) {
+ +	    result = implementor.getImplementation(name, type);
+ +	}
+@@ -119,7 +122,7 @@
+ +    /* Called by the JVM to get the implementation for an injected interface. */
+ +    private MethodHandle[] performInjection(Class<?> target, Class<?> iface,
+ +					    String[] names,MethodType[] types) {
+-+        System.out.println("Trying to inject " + iface " into " + taget);
+++        System.out.println("Trying to inject " + iface + " into " + target);
+ +	// Pull based interface - only ask for the required methods
+ +	InterfaceImplementor implementor = inject(iface, target);
+ +	if (implementor == null) {
+diff --git a/series b/series
+--- a/series
++++ b/series
+@@ -7,9 +7,11 @@
+ indy.patch                      #-/indy #+24a74756a058
+ indy.pack.patch                 #-/indy #+24a74756a058
+ 
++# Interface injection
++inti.patch
++
+ # Keep these separate, for debugging and review:
+ dyncast.patch   #+dyncast       #-/dyncast
+-inti.patch      #+inti          #-/inti #-buildable
+ callcc.patch    #+callcc        #+/meth #+/indy #-/callcc #-testable
+ tailc.patch     #+tailc         #-/tailc
+ anonk.patch                     #-/anonk #+24a74756a058

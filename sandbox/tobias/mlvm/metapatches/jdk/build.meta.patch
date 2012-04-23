@@ -1,0 +1,173 @@
+diff --git a/ia32.patch b/ia32.patch
+new file mode 100644
+--- /dev/null
++++ b/ia32.patch
+@@ -0,0 +1,29 @@
++diff --git a/make/common/Defs-linux.gmk b/make/common/Defs-linux.gmk
++--- a/make/common/Defs-linux.gmk
+++++ b/make/common/Defs-linux.gmk
++@@ -109,9 +109,11 @@
++ #    We need this frame pointer to make it easy to walk the stacks.
++ #    This should be the default on X86, but ia64 and amd64 may not have this
++ #    as the default.
++-CFLAGS_REQUIRED_amd64   += -fno-omit-frame-pointer -D_LITTLE_ENDIAN
++-CFLAGS_REQUIRED_i586    += -fno-omit-frame-pointer -D_LITTLE_ENDIAN
+++CFLAGS_REQUIRED_amd64   += -m64 -fno-omit-frame-pointer -D_LITTLE_ENDIAN
+++CFLAGS_REQUIRED_i586    += -m32 -fno-omit-frame-pointer -D_LITTLE_ENDIAN
++ CFLAGS_REQUIRED_ia64    += -fno-omit-frame-pointer -D_LITTLE_ENDIAN
+++LDFLAGS_COMMON_amd64    += -m64
+++LDFLAGS_COMMON_i586     += -m32
++ CFLAGS_REQUIRED_sparcv9 += -m64 -mcpu=v9
++ LDFLAGS_COMMON_sparcv9  += -m64 -mcpu=v9
++ CFLAGS_REQUIRED_sparc   += -m32 -mcpu=v9
++diff --git a/src/share/native/com/sun/java/util/jar/pack/main.cpp
++b/src/share/native/com/sun/java/util/jar/pack/main.cpp
++--- a/src/share/native/com/sun/java/util/jar/pack/main.cpp
+++++ b/src/share/native/com/sun/java/util/jar/pack/main.cpp
++@@ -24,7 +24,5 @@
++  */
++ #ifdef _ALLBSD_SOURCE
++ #include <stdint.h>
++-#else
++-#include <sys/stdint.h>
++ #endif
++ #include <sys/types.h>
+diff --git a/interim-endian.patch b/interim-endian.patch
+new file mode 100644
+--- /dev/null
++++ b/interim-endian.patch
+@@ -0,0 +1,50 @@
++fix machine/endian.h
++
++diff --git a/src/share/native/java/lang/fdlibm/include/fdlibm.h b/src/share/native/java/lang/fdlibm/include/fdlibm.h
++--- a/src/share/native/java/lang/fdlibm/include/fdlibm.h
+++++ b/src/share/native/java/lang/fdlibm/include/fdlibm.h
++@@ -27,7 +27,7 @@
++ #ifdef __OpenBSD__
++ #include <sys/types.h>
++ #endif
++-#include <machine/endian.h>
+++#include <endian.h>
++ #include "jfdlibm.h"
++ 
++ #ifdef __NEWVALID       /* special setup for Sun test regime */
++diff --git a/src/share/native/sun/awt/medialib/mlib_image.h b/src/share/native/sun/awt/medialib/mlib_image.h
++--- a/src/share/native/sun/awt/medialib/mlib_image.h
+++++ b/src/share/native/sun/awt/medialib/mlib_image.h
++@@ -30,7 +30,7 @@
++ #ifdef __OpenBSD__
++ #include <sys/types.h>
++ #endif
++-#include <machine/endian.h>
+++#include <endian.h>
++ 
++ #include <mlib_types.h>
++ #include <mlib_status.h>
++diff --git a/src/solaris/back/util_md.h b/src/solaris/back/util_md.h
++--- a/src/solaris/back/util_md.h
+++++ b/src/solaris/back/util_md.h
++@@ -31,7 +31,7 @@
++ 
++ #include <limits.h>
++ #include <sys/types.h>
++-#include <machine/endian.h>
+++#include <endian.h>
++ 
++ #ifdef _LP64
++ typedef unsigned long UNSIGNED_JLONG;
++diff --git a/src/solaris/native/sun/java2d/loops/mlib_ImageZoom_NN.c b/src/solaris/native/sun/java2d/loops/mlib_ImageZoom_NN.c
++--- a/src/solaris/native/sun/java2d/loops/mlib_ImageZoom_NN.c
+++++ b/src/solaris/native/sun/java2d/loops/mlib_ImageZoom_NN.c
++@@ -66,7 +66,7 @@
++ #ifdef __OpenBSD__
++ #include <sys/types.h>
++ #endif
++-#include <machine/endian.h>
+++#include <endian.h>
++ #include <mlib_image.h>
++ #include <mlib_ImageZoom.h>
++ 
+diff --git a/jmx.snmp-binaryplugs.patch b/jmx.snmp-binaryplugs.patch
+new file mode 100644
+--- /dev/null
++++ b/jmx.snmp-binaryplugs.patch
+@@ -0,0 +1,18 @@
++fix jmx.snmp binaryplugs
++
++diff --git a/make/common/internal/BinaryPlugs.gmk b/make/common/internal/BinaryPlugs.gmk
++--- a/make/common/internal/BinaryPlugs.gmk
+++++ b/make/common/internal/BinaryPlugs.gmk
++@@ -58,6 +58,12 @@
++ com/sun/jmx/snmp/SnmpTimeticks.class \
++ com/sun/jmx/snmp/SnmpVarBind.class \
++ com/sun/jmx/snmp/SnmpVarBindList.class \
+++com/sun/jmx/snmp/Timestamp.class \
+++com/sun/jmx/snmp/daemon/SnmpRequestCounter.class \
+++com/sun/jmx/snmp/daemon/SnmpSocket.class \
+++com/sun/jmx/snmp/daemon/SnmpQManager.class \
+++com/sun/jmx/snmp/daemon/WaitQ.class \
+++com/sun/jmx/snmp/daemon/SnmpResponseHandler.class \
++ com/sun/jmx/snmp/daemon/SendQ.class \
++ com/sun/jmx/snmp/daemon/SnmpInformRequest.class \
++ com/sun/jmx/snmp/daemon/SnmpSession.class
+diff --git a/series b/series
+--- a/series
++++ b/series
+@@ -7,6 +7,12 @@
+ indy.patch                      #-/indy #+24a74756a058
+ indy.pack.patch                 #-/indy #+24a74756a058
+ 
++# patches required to build
++interim-endian.patch
++jmx.snmp-binaryplugs.patch
++sun-tools-jar.patch
++ia32.patch
++
+ # Keep these separate, for debugging and review:
+ dyncast.patch   #+dyncast       #-/dyncast
+ inti.patch      #+inti          #-/inti #-buildable
+diff --git a/sun-tools-jar.patch b/sun-tools-jar.patch
+new file mode 100644
+--- /dev/null
++++ b/sun-tools-jar.patch
+@@ -0,0 +1,40 @@
++fix sun.tools.jar
++
++diff --git a/src/share/classes/sun/tools/jar/Main.java b/src/share/classes/sun/tools/jar/Main.java
++--- a/src/share/classes/sun/tools/jar/Main.java
+++++ b/src/share/classes/sun/tools/jar/Main.java
++@@ -241,6 +241,16 @@
++                 }
++             } else if (xflag) {
++                 replaceFSC(files);
+++                // Current working directory
+++                cwd = System.getProperty("user.dir");
+++                if (cwd == null) {
+++                    fatalError(getMsg("error.no.cwd"));
+++                }
+++                cwd = (new File(cwd)).getCanonicalPath();
+++                if (!cwd.endsWith(File.separator)) {
+++                    cwd += File.separator;
+++                }
+++
++                 if (fname != null && files != null) {
++                     extract(fname, files);
++                 } else {
++@@ -802,17 +812,6 @@
++      * Extracts specified entries from JAR file.
++      */
++     void extract(InputStream in, String files[]) throws IOException {
++-        // Current working directory
++-
++-        cwd = System.getProperty("user.dir");
++-        if (cwd == null) {
++-            fatalError(getMsg("error.no.cwd"));
++-        }
++-        cwd = (new File(cwd)).getCanonicalPath();
++-        if (!cwd.endsWith(File.separator)) {
++-            cwd += File.separator;
++-        }
++-
++         // Extract the files
++ 
++         ZipInputStream zis = new ZipInputStream(in);

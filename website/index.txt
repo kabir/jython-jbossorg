@@ -1,0 +1,108 @@
+The Jython Project
+++++++++++++++++++
+
+Latest News
+~~~~~~~~~~~
+
+**Jython 2.5.2 RC 4 Has Been Released** (February 15, 2011)
+
+The Jython development team would like to announce the release of 2.5.2 Release Candidate 4.  For a complete listing of changes, please visit the `Release Notes`_.
+
+
+**Jython 2.5.2 RC 3 Has Been Released** (January 11, 2011)
+
+The Jython development team would like to announce the release of 2.5.2 Release Candidate 3.  For a complete listing of changes, please visit the `Release Notes`_.
+
+**Jython 2.5.2 RC 2 Has Been Released** (October 24, 2010)
+
+The Jython development team would like to announce the release of 2.5.2 Release Candidate 2.  For a complete listing of changes, please visit the `Release Notes`_.
+
+**Jython 2.5.2 RC 1 Has Been Released** (October 18, 2010)
+
+The Jython development team would like to announce the release of 2.5.2 Release Candidate 1.  For a complete listing of changes, please visit the `Release Notes`_.
+
+**Jython 2.5.2 Beta 2 Has Been Released** (September 13, 2010)
+
+The Jython development team would like to announce the release of 2.5.2 Beta 2.  For a complete listing of changes, please visit the `Release Notes`_.
+
+Please `download the installer by clicking here`_ to download the release from Sourceforge.  Thanks to the developers for all of the hard work producing this release.  If you find any bugs or issues, please report them to `the bug tracker`_.
+
+**Jython Podcast Site Moved** (Sept 9, 2010)
+
+The Jython Podcast website has been moved to jython.org in an effort to make it more secure and to increase availability.
+
+**Jython 2.5.2 Beta 1 Has Been Released** (June 28, 2010)
+
+The Jython development team would like to announce the release of 2.5.2 Beta 1.  For a complete listing of changes, please visit the `Release Notes`_.
+
+Please `download the installer by clicking here`_ to download the release from Sourceforge.  Thanks to the developers for all of the hard work producing this release.  If you find any bugs or issues, please report them to `the bug tracker`_.
+
+**Using Spring Python from Jython** (May 27, 2010)
+
+Interested in using Spring Python with Jython?  Take a look at `this post`_  by Greg Turnquist to learn more!
+
+**The Definitive Guide to Jython is Published** (February 6, 2010)
+
+`The Definitive Guide to Jython`_ , written by the official Jython team leads, covers the latest Jython 2.5 (or 2.5.x) from the basics to the advanced features. This book begins with a brief introduction to the language and then journeys through Jythons different features and uses.
+
+`The Definitive Guide to Jython`_ is organized for beginners as well as advanced users of the language. The book provides a general overview of the Jython language itself, but it also includes intermediate and advanced topics regarding database, web, and GUI applications; frameworks; and integration, concurrency, and parallelism, to name a few.
+
+This book is available in open-source format at `jythonbook.com`_.
+
+**Websphere Application Server Administration Using Jython** (January 30, 2010)
+
+Utilizing Jython scripting, you can dramatically reduce the effort, resources, and expense associated with managing WebSphere Application Server. WebSphere Application Server Administration Using Jython will show you how.  Read more about it at `ibmpressbooks.com`_ today.
+
+**Project Sikuli Released** (January 28, 2010)
+
+Sikuli is a visual technology to search and automate graphical user interfaces (GUI) using images (screenshots). The first release of Sikuli contains Sikuli Script, a visual scripting API for Jython, and Sikuli IDE, an integrated development environment for writing visual scripts with screenshots easily. Sikuli Script automates anything you see on the screen without internal API's support. You can programmatically control a web page, a desktop application running on Windows/Linux/Mac OS X, or even an iphone application running in an emulator.  For more information, please visit the `Sikuli`_ project site.
+
+**Django Jython 1.1.1 Released** (January 17, 2010)
+
+The django-jython project provides support dor running Django on Jython.  In this most recent release, JNDI support has been included.  Find out more at the `django-jython`_ site today.
+
+**Jython Doc Set Updated** (November 08, 2009)
+
+The Jython `documentation`_ set has been updated to include all modules contained within the Jython standard library.  However, it should be noted that this is still a work in progress since many of these documents have not yet been parsed and tested completely with Jython 2.5.1.  Stay tuned for more updates on the doc set!
+
+Please report all found bugs to the `jython bug tracker`_.
+
+
+Jython 2.5 Documentation
+------------------------
+
+The documentation for Jython 2.5 is being developed on our wiki_.  Please help
+Jython by adding content and updating our wiki. As the content matures for 2.5
+it will be pulled back into this website.
+
+You may also wish to check the `jython-users`_ mailing list archives as many questions and answers can be found there.
+
+
+.. _wiki: http://wiki.python.org/jython
+.. _Jython 2.1: ./archive/21/index.html
+.. _Jython 2.2: ./archive/22/index.html
+.. _Installation instructions: http://wiki.python.org/jython/InstallationInstructions
+.. _Download location: http://downloads.sourceforge.net/jython/jython_installer-2.2.1.jar
+.. _jython-users: http://sourceforge.net/mailarchive/forum.php?forum_name=jython-users
+.. _jython bug tracker: http://bugs.jython.org/
+.. _jython-users subscribe: https://lists.sourceforge.net/lists/listinfo/jython-users
+.. _wiki examples page: http://wiki.python.org/jython/DocumentationAndEducation
+.. _"The Definitive Guide to Jython": http://developers.apress.com/book/view/9781430225270
+.. _Download 2.5.1 rc1 today: https://sourceforge.net/projects/jython/files/jython/2.5.1rc1/jython_installer-2.5.1rc1.jar/download
+.. _wiki instructions: http://wiki.python.org/jython/InstallationInstructions
+.. _Download 2.5.1 rc2 today: https://sourceforge.net/projects/jython/files/jython-dev/2.5.1rc2/jython_installer-2.5.1rc2.jar/download
+.. _Jython 2.5.1: https://sourceforge.net/projects/jython/files/jython/2.5.1/jython_installer-2.5.1.jar/download
+.. _Download 2.5.1 rc3: https://sourceforge.net/projects/jython/files/jython-dev/2.5.1rc3/jython_installer-2.5.1rc3.jar/download
+.. _django-jython: http://code.google.com/p/django-jython/
+.. _ibmpressbooks.com: http://www.ibmpressbooks.com/bookstore/product.asp?isbn=9780137009527
+.. _Sikuli:  http://groups.csail.mit.edu/uid/sikuli/
+.. _documentation: http://jython.org/currentdocs.html
+.. _The Definitive Guide to Jython: http://apress.com/book/view/9781430225270
+.. _jythonbook.com:  http://jythonbook.com
+.. _this post: http://blog.springpython.webfactional.com/2009/10/15/see-how-spring-python-works-with-jython/
+.. _Release Notes: http://www.jython.org/latest.html
+.. _the bug tracker: http://bugs.jython.org
+.. _download the installer by clicking here: http://sourceforge.net/projects/jython/files/jython-dev/2.5.2rc4/jython_installer-2.5.2rc4.jar/download
+
+
+

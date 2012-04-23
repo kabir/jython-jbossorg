@@ -1,0 +1,101 @@
+Title: Installing Jython
+
+<H3>Installation</H1>
+
+<P>Jython is distributed as a self-extracting .class file created by 
+<A HREF="http://liftoff.sourceforge.net">LiftOff</A>. 
+To install Jython, open the command line to the directory in which 
+you have placed the jython-21.class file and then type:
+
+<BLOCKQUOTE>
+	<P>&lt;java interpreter&gt; jython-21</P>
+</BLOCKQUOTE>
+
+<P>You will probably type one of the following three lines,
+depending on your system. <b>Be sure <em>not</em> to put &quot;.class&quot; 
+at the end of the file name.</b>
+
+<BLOCKQUOTE>
+	<P><TT>java jython-21</TT></P>
+
+	<P><TT>jre jython-21</TT></P>
+
+	<P><TT>jview jython-21</TT>
+</BLOCKQUOTE>
+
+<p>It can be necessay to set the CLASSPATH to include the current directory
+
+<BLOCKQUOTE>
+	<P><TT>env CLASSPATH=. java jython-21</TT>
+
+	<P><TT>java -cp . jython-21</TT>
+
+	<P><TT>java -classpath . jython-21</TT>
+
+	<P><TT>jview /cp:. jython-21</TT>
+</BLOCKQUOTE>
+
+<P>Which command to use depends on your operating system and java version. 
+If you have more than one java installed, you may have to supply an explicit 
+path the java command. When installing the JDK 1.2 from javasoft, the 
+default is it install both the JDK and a plugin JRE. The plugin JRE is added
+to your PATH, so running the <tt>java jython-21</tt> command will make jython
+use the JRE. Specify the full path if you want to use JDK instead, ie:
+<tt>c:\Programs\JDK1.2\bin\java -cp . jython-21</tt>.
+
+<P>If you do not have a GUI, then add <tt>-o dir_to_install_to</tt> to the 
+command above. Jython will install to the specified directory without 
+bringing up the graphical installer. E.g. to install all modules to a 
+Jython-2.1 subdirectory in the current directory do: 
+
+<BLOCKQUOTE>
+  <P><TT>&lt;java interpreter&gt; jython-21 -o Jython-2.1 demo lib source</TT>
+</BLOCKQUOTE>
+
+
+
+<P>After completing installation, you should be able to run Jython by typing:</P>
+
+<BLOCKQUOTE>
+	<P><TT>jython</TT></P>
+</BLOCKQUOTE>
+
+<H3>What Can Go Wrong</H3>
+
+<P>You should check out this section if your Jython installation 
+doesn't quite work right. It will contain tips for solving the 
+most common problems.
+
+<H4>Can't Access Standard Python Modules</H4>
+
+<P>Not all the modules form CPython is available in Jython. Some modules
+require a C language dynamic link library that doesn't exists in java.
+Other modules are missing from Jython just because nobody have had a
+need for it before and no-one have tested the CPython module with Jython.
+If you discover that you are missing a module, try to copy the .py file
+from a CPython distribution to a directory on your Jython sys.path.
+If that works you are set. If it doesn't work, try asking on jython-users
+mailing list.
+
+<H4>Other Problems</H4>
+
+<P>Any other problems with the installation should be reported to 
+<A HREF="mailto:jython-dev@lists.sourceforge.net">jython-dev</A>.
+
+<P>As a workaround you can extract the jython-21.class manually.
+The class file is basicly a .zip file and most unzip programs can
+manage to extract the contents of the class into a directory.
+After doing that, you must 
+<ul>
+<li>Remove the <tt>net</tt> directory. It isn't needed.
+<li>Create the startup script by hand. Use the <tt>installer/template*</tt>
+    files as a starting point in doing so.
+</ul>
+
+<H4>Platform Specific Notes</H4>
+
+<P>If all else fails, you might find that your problem is unique to 
+your platform, and has a solution mentioned on the 
+<A HREF="platform.html">Platform Specific Information</A> page.
+
+<p>

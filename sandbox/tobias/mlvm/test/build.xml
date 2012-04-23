@@ -1,0 +1,53 @@
+<project name="mlvm-test" default="jar" basedir=".">
+  <target name="clean">
+    <delete dir="${basedir}/build"/>
+    <delete file="${basedir}/${ant.project.name}.jar"/>
+  </target>
+
+  <target name="base properties">
+    <property name="prop.file" value="libraries.properties"/>
+    <property prefix="lib" file="${basedir}/${prop.file}"/>
+    <property name="prop.message" value="must be defined in ${prop.file}"/>
+    <fail message="junit4 ${prop.message}" unless="lib.junit4"/>
+    <fail message="asm ${prop.message}" unless="lib.asm"/>
+  </target>
+
+  <target name="build properties" depends="base properties">
+    <property name="lib.dummy.path" location="${basedir}/../dummy/"/>
+  </target>
+
+  <target name="run properties" depends="base properties">
+    <fail message="java7.home ${prop.message}" unless="lib.java7.home"/>
+  </target>
+  
+  <target name="dummies" depends="build properties">
+    <ant dir="${lib.dummy.path}" target="jar"/>
+  </target>
+
+  <target name="build" depends="build properties,dummies">
+    <mkdir dir="${basedir}/build"/>
+    <javac srcdir="${basedir}/src" destdir="${basedir}/build">
+      <classpath>
+	<pathelement location="${lib.junit4}"/>
+	<pathelement location="${lib.asm}"/>
+	<pathelement location="${lib.dummy.path}/mlvm-dummies.jar"/>
+      </classpath>
+    </javac>
+  </target>
+  <target name="jar" depends="build">
+    <jar destfile="${basedir}/${ant.project.name}.jar">
+      <fileset dir="${basedir}/build"/>
+    </jar>
+  </target>
+
+  <target name="exec" depends="run properties,jar">
+    <junit test="org.thobe.mlvm.test.inti.GeneratedTests"
+	   fork="true" jvm="${lib.java7.home}/bin/java">
+      <classpath>
+	<pathelement location="${lib.junit4}"/>
+	<pathelement location="${lib.asm}"/>
+	<pathelement location="${basedir}/${ant.project.name}.jar"/>
+      </classpath>
+    </junit>
+  </target>
+</project>

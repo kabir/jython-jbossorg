@@ -1,0 +1,16 @@
+diff --git a/jython/src/org/python/core/PyGenerator.java b/jython/src/org/python/core/PyGenerator.java
+--- a/jython/src/org/python/core/PyGenerator.java
++++ b/jython/src/org/python/core/PyGenerator.java
+@@ -26,6 +26,12 @@
+         // the generator
+         generatorExit = Py.makeException(Py.GeneratorExit);
+     }
++    
++    @Override
++    @ExposedMethod(names = {"__str__", "__repr__"})
++    public String toString() {
++        return "<generator object "+ gi_frame.f_code.co_name +" at 0>";
++    }
+ 
+     @ExposedMethod
+     public PyObject send(PyObject value) {

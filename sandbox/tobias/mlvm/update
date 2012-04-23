@@ -1,0 +1,29 @@
+#!/bin/bash
+
+EXE=$0
+while [ -L "$EXE" ]; do
+    EXE=`readlink $EXE`
+done
+cd `dirname $EXE`
+BASE=`pwd`
+
+sh patches/make/each-patch-repo.sh  hg qpop -a
+sh patches/make/each-patch-repo.sh  hg pull -u
+sh patches/make/each-patch-repo.sh  hg qpop -a -R .hg/patches
+sh patches/make/each-patch-repo.sh  hg pull -u -R .hg/patches
+
+cd $BASE/sources
+hg ffetch && hg fupdate
+cd $BASE
+svn up
+
+export davinci=$(pwd)
+guards="buildable testable"
+sh patches/make/each-patch-repo.sh "hg qselect --pop $guards" \
+    '$(sh $davinci/patches/make/current-release.sh)'
+sh patches/make/each-patch-repo.sh "hg qselect; hg qunapplied"
+sh patches/make/each-patch-repo.sh "hg update -r" \
+    '$(sh $davinci/patches/make/current-release.sh)'
+
+sh patches/make/each-patch-repo.sh hg qpush -a -R .hg/patches
+sh patches/make/each-patch-repo.sh hg qpush -a

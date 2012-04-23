@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project name="ssa-compiler" default="jar" basedir=".">
+  <property name="src.dir" location="${basedir}/src/main/java"/>
+  <property name="test.dir" location="${basedir}/src/test/java"/>
+  <property name="target.dir" location="${basedir}"/>
+  <property name="build.dir" location="${basedir}/build"/>
+  <property name="ssa-compiler.jar" location="${target.dir}/ssa.jar"/>
+
+  <target name="clean">
+    <delete dir="${build.dir}"/>
+    <delete file="${ssa-compiler.jar}"/>
+  </target>
+
+  <target name="build">
+    <mkdir dir="${build.dir}"/>
+    <javac destdir="${build.dir}">
+      <src path="${src.dir}"/>
+    </javac>
+  </target>
+
+  <target name="test" depends="build">
+  </target>
+
+  <target name="jar" depends="build">
+    <jar jarfile="${ssa-compiler.jar}">
+      <fileset dir="${build.dir}"/>
+    </jar>
+  </target>
+</project>

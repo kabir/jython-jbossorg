@@ -1,0 +1,17 @@
+#!/bin/bash
+
+EXE=$0
+while [ -L "$EXE" ]; do
+      EXE=`readlink $EXE`
+done
+BASE=`dirname $EXE`
+
+cd $BASE
+BASE=`pwd`
+
+hg fclone http://hg.openjdk.java.net/bsd-port/bsd-port sources
+hg fclone http://hg.openjdk.java.net/mlvm/mlvm patches
+bash patches/make/link-patch-dirs.sh sources patches
+bash patches/make/link-patch-dirs.sh patches metapatches
+
+# ./update initial

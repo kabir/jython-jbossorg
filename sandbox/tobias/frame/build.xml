@@ -1,0 +1,106 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project name="FrameIntrospection" default="jar" basedir=".">
+  <import file="jnitask/jnic.xml"/>
+  <property name="libname" value="frameintrospect"/>
+  <property name="version" value="1.0"/>
+  <property name="src" location="src"/>
+  <property name="src.test" location="test"/>
+  <property name="native" location="native"/>
+  <property name="build" location="build"/>
+  <property name="classes" location="${build}/classes"/>
+  <property name="build.test" location="${build}/test"/>
+  <property name="build.native" location="${build}/native"/>
+  <property name="test.class" value="org.thobe.frame.Test"/>
+  <property name="native.header" location="${build.native}/callframes.h"/>
+  <property name="agent.path" value=""/>
+  <property name="jar" value="${libname}.jar"/>
+
+  <!-- os.prefix -->
+  <condition property="os.prefix" value="win32-${os.arch}">
+    <os family="windows"/>
+  </condition>
+  <condition property="os.prefix" value="linux-i386">
+    <!-- IBM's J9 reports 'x86' -->
+    <and><os name="Linux"/><os arch="x86"/></and>
+  </condition>
+  <condition property="os.prefix" value="linux-amd64">
+    <!-- Debian reports 'x86_64' -->
+    <and><os name="Linux"/><os arch="x86_64"/></and>
+  </condition>
+  <condition property="os.prefix" value="linux-${os.arch}">
+    <os name="Linux"/>
+  </condition>
+  <!-- Darwin builds are universal, no arch required -->
+  <condition property="os.prefix" value="darwin">
+    <os family="mac"/>
+  </condition>
+  <condition property="os.prefix" value="sunos-${os.arch}">
+    <os name="SunOS"/>
+  </condition>
+  <condition property="os.prefix" value="freebsd-${os.arch}">
+    <os name="FreeBSD"/>
+  </condition>
+  <condition property="os.prefix" value="openbsd-${os.arch}">
+    <os name="OpenBSD"/>
+  </condition>
+
+  <target name="clean">
+    <delete dir="${build}"/>
+  </target>
+
+  <target name="jar" depends="native">
+    <mkdir dir="${classes}/org/thobe/frame/${os.prefix}"/>
+    <copy todir="${classes}/org/thobe/frame/${os.prefix}">
+      <fileset dir="${build.native}"
+               includes="${libname}.dll,lib${libname}.*"/>
+    </copy>
+    <jar jarfile="${build}/${jar}">
+      <fileset dir="${classes}"/>
+    </jar>
+  </target>
+
+  <target name="compile">
+    <mkdir dir="${classes}"/>
+    <javac destdir="${classes}">
+      <src path="${src}"/>
+    </javac>
+  </target>
+
+  <target name="headers" depends="compile">
+    <mkdir dir="${build.native}"/>
+    <javah classpath="${classes}" outputfile="${native.header}" force="yes">
+      <class name="org.thobe.frame.Frame"/>
+      <class name="org.thobe.frame.Frame$ThreadFrames"/>
+    </javah>
+  </target>
+
+  <target name="native" depends="headers">
+    <fail unless="os.prefix">
+      OS/arch not supported (${os.name}/${os.arch}),
+      edit build.xml and native/Makefile to add it.
+    </fail>
+    <jnic library="${libname}" version="${version}"
+	  sourcepath="${native}"
+	  headerpath="${build.native}"
+	  destdir="${build.native}"/>
+  </target>
+
+  <target name="compile test" depends="compile">
+    <mkdir dir="${build.test}"/>
+    <javac destdir="${build.test}" classpath="${classes}"
+	   debug="true" debuglevel="vars,lines">
+      <src path="${src.test}"/>
+    </javac>
+  </target>
+
+  <target name="test" depends="jar,compile test">
+    <java classpath="${build}/${jar}:${build.test}" failonerror="true"
+	  classname="${test.class}" fork="true" dir="${build.native}">
+      <jvmarg value="-Xcheck:jni"/>
+      <jvmarg value="-agentlib:${libname}="/>
+      <jvmarg value="-Djava.library.path=${java.library.path}:${build.native}"/>
+      <env key="LD_LIBRARY_PATH" path="${build.native}"/>
+    </java>
+  </target>
+
+</project>
