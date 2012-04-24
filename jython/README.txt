@@ -1,5 +1,12 @@
 Welcome to Jython 2.5.2
-=======================
+--------------------------
+
+This is a snapshot build.
+It reflects the current development status.
+				
+The readme text for the next release will be like:
+
+            
 
 This is the final 2.5.2 release of Jython.
 It contains the fixes of the blocker bugs since 2.5.2 release candidate 3.

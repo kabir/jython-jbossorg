@@ -1,0 +1,5 @@
+build/
+dist/
+jython/tests/data/initializer/SyspathAppendingInitializer.class
+.DS_Store
+jython/checkout
