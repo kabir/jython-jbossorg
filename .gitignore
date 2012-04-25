@@ -3,3 +3,4 @@ dist/
 jython/tests/data/initializer/SyspathAppendingInitializer.class
 .DS_Store
 jython/checkout
+jython/jython_installer-2.5.2.jar
